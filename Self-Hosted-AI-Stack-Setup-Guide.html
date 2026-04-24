@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docker · n8n · ngrok — Self-Hosted AI Stack Setup Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #171717;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --accent: #e8ff6b;
+      --accent2: #6bffb8;
+      --accent3: #ff6b9d;
+      --text: #e8e8e0;
+      --text-muted: #888880;
+      --text-dim: #555550;
+      --warning-bg: #1f1a00;
+      --warning-border: #4a3f00;
+      --tip-bg: #001a0f;
+      --tip-border: #004a2a;
+      --info-bg: #00101a;
+      --info-border: #003a5a;
+      --code-bg: #111;
+      --serif: 'DM Serif Display', Georgia, serif;
+      --mono: 'DM Mono', 'Fira Code', monospace;
+      --sans: 'DM Sans', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.7;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 2rem 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-brand {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar-brand .label {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar-brand h2 {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      color: var(--text);
+      line-height: 1.3;
+      font-style: italic;
+    }
+
+    .sidebar-brand h2 em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    .nav-section {
+      padding: 0 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .nav-section-label {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-section a {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.3rem 0;
+      transition: color 0.15s;
+      font-weight: 400;
+    }
+
+    .nav-section a:hover { color: var(--accent); }
+
+    .nav-section a.sub {
+      padding-left: 0.75rem;
+      font-size: 12px;
+      color: var(--text-dim);
+      border-left: 1px solid var(--border);
+    }
+
+    .nav-section a.sub:hover { color: var(--text-muted); border-color: var(--accent); }
+
+    /* MAIN */
+    .main {
+      margin-left: 260px;
+      flex: 1;
+      max-width: 860px;
+      padding: 0 3rem 6rem;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 5rem 0 4rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 5rem;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 580px;
+      line-height: 1.75;
+      margin-bottom: 2rem;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 0.3rem 0.75rem;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    .tag.green { border-color: #2a4a35; color: var(--accent2); background: #001a0f; }
+    .tag.yellow { border-color: #4a4000; color: var(--accent); background: #1a1500; }
+
+    /* PART SECTIONS */
+    .part {
+      margin-bottom: 6rem;
+    }
+
+    .part-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .part-number {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      flex-shrink: 0;
+    }
+
+    .part h2 {
+      font-family: var(--serif);
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .part h2 em {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    /* OS TABS */
+    .os-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      width: fit-content;
+    }
+
+    .os-tab {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 0.5rem 1.25rem;
+      background: var(--surface);
+      color: var(--text-dim);
+      cursor: pointer;
+      border: none;
+      border-right: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+
+    .os-tab:last-child { border-right: none; }
+    .os-tab.active { background: var(--accent); color: #000; font-weight: 500; }
+    .os-tab:hover:not(.active) { color: var(--text-muted); background: var(--surface2); }
+
+    .os-content { display: none; }
+    .os-content.active { display: block; }
+
+    /* STEPS */
+    .step {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .step-body { flex: 1; }
+
+    .step-body h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    .step-body p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .step-body p:last-child { margin-bottom: 0; }
+
+    /* CODE BLOCKS */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.25rem 1.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #c8c8b8;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.875em;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: var(--accent2);
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    .code-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.4rem;
+    }
+
+    /* CALLOUTS */
+    .callout {
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      font-size: 0.9rem;
+    }
+
+    .callout-icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+    .callout-body { flex: 1; }
+    .callout-body strong { display: block; margin-bottom: 0.3rem; font-size: 0.85rem; letter-spacing: 0.02em; }
+    .callout-body p { margin: 0; line-height: 1.6; }
+
+    .callout.warning {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: #c8b860;
+    }
+
+    .callout.tip {
+      background: var(--tip-bg);
+      border: 1px solid var(--tip-border);
+      color: #60c898;
+    }
+
+    .callout.info {
+      background: var(--info-bg);
+      border: 1px solid var(--info-border);
+      color: #60a8c8;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      margin: 1.5rem 0;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.6rem 1rem;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+
+    td strong { color: var(--text); font-weight: 500; }
+    tr:hover td { background: var(--surface); }
+
+    /* YAML BLOCK */
+    .yaml-block {
+      background: #0a0f0a;
+      border: 1px solid #1a3a20;
+      border-radius: 4px;
+      padding: 1.25rem 1.5rem;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #a8c8a0;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .yaml-key { color: #7abf8a; }
+    .yaml-value { color: #c8e8b0; }
+    .yaml-comment { color: #4a6a40; font-style: italic; }
+    .yaml-string { color: #e8c880; }
+
+    /* CHECKLIST */
+    .checklist {
+      list-style: none;
+      margin: 1rem 0;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .checklist li:last-child { border-bottom: none; }
+
+    .check-box {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    /* SECTION DIVIDER */
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* INLINE HIGHLIGHT */
+    .highlight { color: var(--accent); font-weight: 500; }
+    .highlight2 { color: var(--accent2); }
+
+    /* FOOTER */
+    .guide-footer {
+      margin-top: 6rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 0 1.5rem 4rem; }
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ANIMATION */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .part { animation: fadeIn 0.4s ease both; }
+
+    /* PLATFORM BADGE */
+    .platform-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+      margin-right: 0.4rem;
+    }
+
+    .badge-win { background: #001428; border: 1px solid #003a6a; color: #60a8ff; }
+    .badge-mac { background: #1a0028; border: 1px solid #4a006a; color: #c060ff; }
+    .badge-linux { background: #0f1a00; border: 1px solid #2a4a00; color: #80c040; }
+    .badge-all { background: #1a1000; border: 1px solid #4a3000; color: #c08040; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="label">Systems Manual</div>
+    <h2>Chelsea Andrea<br/><em>Dominguez</em></h2>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a href="#intro">Introduction</a>
+    <a href="#prereqs">What You Need</a>
+    <a href="#toc">Table of Contents</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Part 1 — Docker</div>
+    <a href="#part1">What is Docker?</a>
+    <a href="#docker-install" class="sub">Install Docker Desktop</a>
+    <a href="#docker-verify" class="sub">Verify Installation</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Part 2 — n8n Starter Kit</div>
+    <a href="#part2">What is the Starter Kit?</a>
+    <a href="#n8n-clone" class="sub">Clone the Repo</a>
+    <a href="#n8n-run" class="sub">Start the Stack</a>
+    <a href="#n8n-access" class="sub">Access n8n</a>
+    <a href="#n8n-account" class="sub">Create Your Account</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Part 3 — ngrok in Docker</div>
+    <a href="#part3">What is ngrok?</a>
+    <a href="#ngrok-account" class="sub">Create ngrok Account</a>
+    <a href="#ngrok-domain" class="sub">Get Static Domain</a>
+    <a href="#ngrok-compose" class="sub">Add to docker-compose</a>
+    <a href="#ngrok-network" class="sub">Fix Network Issue</a>
+    <a href="#ngrok-run" class="sub">Run & Verify</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Part 4 — Updates</div>
+    <a href="#part4">Updating the Stack</a>
+    <a href="#update-all" class="sub">Update Everything</a>
+    <a href="#update-single" class="sub">Update One Container</a>
+    <a href="#update-safe" class="sub">Safe Update Checklist</a>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- HERO -->
+  <section class="hero" id="intro">
+    <div class="hero-eyebrow">Systems Manual · Docker Stack</div>
+    <h1>Self-Hosted <em>AI Stack</em><br/>Setup Guide</h1>
+    <p class="hero-desc">
+      A complete walkthrough for installing Docker, running the n8n self-hosted AI starter kit,
+      and setting up ngrok inside Docker so your webhooks stay live without keeping a terminal open.
+      Written for both first-timers and future-you who forgot how this works.
+    </p>
+    <div class="hero-tags">
+      <span class="tag green">Beginner-Friendly</span>
+      <span class="tag yellow">Windows · Mac · Linux</span>
+      <span class="tag">Docker Desktop</span>
+      <span class="tag">n8n</span>
+      <span class="tag">ngrok</span>
+      <span class="tag">Ollama · Qdrant · Postgres</span>
+    </div>
+  </section>
+
+  <!-- PREREQS -->
+  <section class="part" id="prereqs" style="margin-bottom:4rem;">
+    <div class="part-header">
+      <span class="part-number">00</span>
+      <h2>Before You Start</h2>
+    </div>
+
+    <p style="color:var(--text-muted); margin-bottom:1.5rem;">You need three things set up before anything in this guide will work.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Requirement</th>
+          <th>Why you need it</th>
+          <th>Where to get it</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>A computer</strong><br/><span style="font-size:0.8rem; color:var(--text-dim);">Windows 10+, macOS 12+, or Linux</span></td>
+          <td>Docker runs the containers. You need at least 8GB RAM for the full stack.</td>
+          <td>You already have this.</td>
+        </tr>
+        <tr>
+          <td><strong>Git</strong></td>
+          <td>Used to download (clone) the n8n starter kit repo from GitHub.</td>
+          <td><a href="https://git-scm.com/downloads" style="color:var(--accent2);">git-scm.com/downloads</a></td>
+        </tr>
+        <tr>
+          <td><strong>A terminal</strong></td>
+          <td>You'll run commands in it. PowerShell on Windows, Terminal on Mac/Linux.</td>
+          <td>Already on your system. Docker Desktop also has a built-in terminal.</td>
+        </tr>
+        <tr>
+          <td><strong>A text editor</strong></td>
+          <td>You'll edit the docker-compose.yml file. VS Code is recommended.</td>
+          <td><a href="https://code.visualstudio.com/" style="color:var(--accent2);">code.visualstudio.com</a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div class="callout-body">
+        <strong>Using Docker Desktop's built-in terminal</strong>
+        <p>Once Docker Desktop is installed, you can run all commands from its built-in terminal instead of opening a separate PowerShell or Terminal window. Click the <strong>Terminal</strong> button in the bottom-right of Docker Desktop.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PART 1: DOCKER -->
+  <section class="part" id="part1">
+    <div class="part-header">
+      <span class="part-number">01</span>
+      <h2>Installing <em>Docker</em></h2>
+    </div>
+
+    <p style="color:var(--text-muted); margin-bottom:2rem;">
+      Docker is the engine that runs everything. It packages software into isolated containers so you don't have to manually install n8n, Postgres, or Ollama on your machine. Install Docker once, and everything else in this guide follows.
+    </p>
+
+    <!-- INSTALL STEPS -->
+    <div id="docker-install">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Download Docker Desktop</h3>
+          <p>Go to <a href="https://www.docker.com/products/docker-desktop/" style="color:var(--accent2);">docker.com/products/docker-desktop</a> and download the installer for your operating system.</p>
+
+          <div class="os-tabs">
+            <button class="os-tab active" onclick="switchOS(this, 'install')">Windows</button>
+            <button class="os-tab" onclick="switchOS(this, 'install')">Mac</button>
+            <button class="os-tab" onclick="switchOS(this, 'install')">Linux</button>
+          </div>
+
+          <div class="os-content active" data-group="install">
+            <p>Download the <strong>Docker Desktop for Windows</strong> installer (.exe). Run it and follow the prompts. When asked, enable <strong>WSL 2</strong> (Windows Subsystem for Linux) — Docker needs this to run on Windows. Restart your computer after installation.</p>
+            <div class="callout warning">
+              <span class="callout-icon">⚠️</span>
+              <div class="callout-body">
+                <strong>WSL 2 is required on Windows</strong>
+                <p>If Docker asks you to install the WSL 2 kernel update, do it. Go to <a href="https://aka.ms/wsl2kernel" style="color:#c8b860;">aka.ms/wsl2kernel</a>, download and run the update, then restart.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="os-content" data-group="install">
+            <p>Download the correct version for your chip: <strong>Apple Silicon (M1/M2/M3/M4)</strong> or <strong>Intel</strong>. Open the .dmg file, drag Docker to Applications, and launch it. macOS will ask for your password to install helper components — allow it.</p>
+            <div class="callout info">
+              <span class="callout-icon">ℹ️</span>
+              <div class="callout-body">
+                <strong>Unsure which Mac you have?</strong>
+                <p>Click the Apple menu → About This Mac. If Chip shows "Apple M..." you need the Apple Silicon build. If it shows Intel Core, download the Intel version.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="os-content" data-group="install">
+            <p>Install Docker Engine and Docker Compose directly. On Ubuntu/Debian:</p>
+            <pre><code>sudo apt-get update
+sudo apt-get install docker.io docker-compose-v2
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER</code></pre>
+            <p>Log out and back in after the last command so your user has Docker permissions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Launch Docker Desktop</h3>
+          <p>Open Docker Desktop from your applications. The first launch takes 1–2 minutes while it initializes. You'll see the Docker whale icon in your taskbar (Windows) or menu bar (Mac) when it's ready.</p>
+          <div class="callout tip">
+            <span class="callout-icon">💡</span>
+            <div class="callout-body">
+              <strong>You don't need a Docker account</strong>
+              <p>Docker will prompt you to sign in or create an account. You can skip this — it's not required to run the stack in this guide.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="docker-verify">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Verify the Installation</h3>
+          <p>Open a terminal (or Docker Desktop's built-in terminal) and run:</p>
+          <pre><code>docker --version
+docker compose version</code></pre>
+          <p>You should see version numbers printed for both. If you get "command not found", Docker isn't installed correctly — restart and try the installer again.</p>
+
+          <div class="callout tip">
+            <span class="callout-icon">✅</span>
+            <div class="callout-body">
+              <strong>Expected output looks like this</strong>
+              <p>Docker version 27.x.x<br/>Docker Compose version v2.x.x</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- PART 2: N8N STARTER KIT -->
+  <section class="part" id="part2">
+    <div class="part-header">
+      <span class="part-number">02</span>
+      <h2>Installing the <em>n8n</em> Starter Kit</h2>
+    </div>
+
+    <p style="color:var(--text-muted); margin-bottom:2rem;">
+      The self-hosted AI starter kit is a pre-configured Docker setup that runs n8n, Postgres, Ollama, and Qdrant together with a single command. You get a full local AI automation environment without configuring each service manually.
+    </p>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div class="callout-body">
+        <strong>What's included in the stack</strong>
+        <p><strong>n8n</strong> — your automation workflow engine. <strong>Postgres</strong> — the database that stores all your workflows and credentials. <strong>Ollama</strong> — runs local AI models on your machine. <strong>Qdrant</strong> — vector database for AI memory and search.</p>
+      </div>
+    </div>
+
+    <div class="step" id="n8n-clone">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Clone the Repository</h3>
+        <p>Open a terminal and navigate to where you want the project folder to live. Then run:</p>
+        <pre><code>git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
+cd self-hosted-ai-starter-kit</code></pre>
+        <p>This downloads the starter kit to your machine and enters the project folder. Everything from here runs inside this folder.</p>
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>Where to put it</strong>
+            <p>Put it somewhere easy to find. On Windows: <code>C:\Users\YourName\</code>. On Mac/Linux: <code>~/</code> (your home folder). Avoid paths with spaces in the name.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="n8n-run">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Start the Full Stack</h3>
+        <p>From inside the <code>self-hosted-ai-starter-kit</code> folder, run:</p>
+
+        <div class="os-tabs">
+          <button class="os-tab active" onclick="switchOS(this, 'run')">CPU Only (No GPU)</button>
+          <button class="os-tab" onclick="switchOS(this, 'run')">NVIDIA GPU</button>
+          <button class="os-tab" onclick="switchOS(this, 'run')">AMD GPU</button>
+        </div>
+
+        <div class="os-content active" data-group="run">
+          <div class="code-label">Most users — no GPU required</div>
+          <pre><code>docker compose --profile cpu up -d</code></pre>
+        </div>
+        <div class="os-content" data-group="run">
+          <div class="code-label">For NVIDIA GPU acceleration</div>
+          <pre><code>docker compose --profile gpu-nvidia up -d</code></pre>
+        </div>
+        <div class="os-content" data-group="run">
+          <div class="code-label">For AMD GPU acceleration</div>
+          <pre><code>docker compose --profile gpu-amd up -d</code></pre>
+        </div>
+
+        <p>The <code>-d</code> flag runs everything in the background. The first time this runs, Docker will download all the images — this takes 5–15 minutes depending on your internet speed.</p>
+
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>First run takes a while — that's normal</strong>
+            <p>Docker is downloading the n8n, Postgres, Ollama, and Qdrant images. You'll see lots of text scrolling. Wait for it to finish before proceeding.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="n8n-access">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Check That Everything is Running</h3>
+        <p>In Docker Desktop, click <strong>Containers</strong> in the left sidebar. You should see a group named <strong>self-hosted-ai-starter-kit</strong> with these containers running (green dot):</p>
+        <ul style="color:var(--text-muted); margin-left:1.5rem; margin-top:0.5rem; font-size:0.9rem; line-height:2;">
+          <li><strong style="color:var(--text);">n8n</strong> — port 5678</li>
+          <li><strong style="color:var(--text);">postgres-1</strong> — your workflow database</li>
+          <li><strong style="color:var(--text);">qdrant</strong> — port 6333</li>
+          <li><strong style="color:var(--text);">ollama</strong> — port 11434</li>
+        </ul>
+        <p>Open your browser and go to <code>http://localhost:5678</code> — you should see the n8n setup screen.</p>
+      </div>
+    </div>
+
+    <div class="step" id="n8n-account">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Create Your n8n Account</h3>
+        <p>The first time you open n8n at <code>localhost:5678</code>, it shows an account setup screen. Fill in:</p>
+        <ul style="color:var(--text-muted); margin-left:1.5rem; margin-top:0.5rem; font-size:0.9rem; line-height:2;">
+          <li>Your email address</li>
+          <li>A password you'll remember</li>
+          <li>Your first and last name</li>
+        </ul>
+        <p>Click <strong>Create account</strong>. This creates the owner account for your self-hosted instance. After this, n8n goes straight to your workflow dashboard.</p>
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>Don't delete the Postgres container or its volume</strong>
+            <p>All your workflows and credentials live inside the <strong>postgres-1</strong> container's volume. Deleting that volume means losing everything. The n8n container itself is safe to delete and recreate — only the database volume matters.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- PART 3: NGROK -->
+  <section class="part" id="part3">
+    <div class="part-header">
+      <span class="part-number">03</span>
+      <h2>Adding <em>ngrok</em> to Docker</h2>
+    </div>
+
+    <p style="color:var(--text-muted); margin-bottom:2rem;">
+      ngrok creates a public URL that points to your local n8n. Without it, services like Instagram, WhatsApp, or any other webhook-based integration can't reach your n8n instance because it's only visible on your local network. Running ngrok inside Docker means it starts automatically with your stack — no PowerShell window needed.
+    </p>
+
+    <div class="step" id="ngrok-account">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Create a Free ngrok Account</h3>
+        <p>Go to <a href="https://ngrok.com" style="color:var(--accent2);">ngrok.com</a> and sign up for a free account. You need this for your authtoken and your static domain.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Get Your Authtoken</h3>
+        <p>After signing in, go to <strong>Getting Started → Your Authtoken</strong> in the left sidebar. Copy the token — it's a long string that looks like:</p>
+        <pre><code>2abc123XYZexample_TokenStringHere</code></pre>
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>Keep this token private</strong>
+            <p>Your authtoken is like a password. Don't paste it into public GitHub repos or share it in screenshots. If it gets exposed, go back to the ngrok dashboard and click <strong>Reset Authtoken</strong> to generate a new one.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="ngrok-domain">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Get a Static Domain</h3>
+        <p>Free ngrok accounts get one permanent domain. Go to <strong>Universal Gateway → Domains</strong> in the ngrok dashboard. Click <strong>New Domain</strong> — ngrok generates a free static domain for you that looks like:</p>
+        <pre><code>your-word-here.ngrok-free.app</code></pre>
+        <p>Copy this domain. You'll use it in the next step. This domain never changes, so your webhook URLs stay stable across restarts.</p>
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>Why a static domain matters</strong>
+            <p>Without a static domain, ngrok generates a random URL every time it starts. That means re-configuring every webhook in Meta, Slack, or wherever you've set them up. A static domain locks your URL permanently.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="ngrok-compose">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Edit docker-compose.yml</h3>
+        <p>Open the <code>docker-compose.yml</code> file inside your <code>self-hosted-ai-starter-kit</code> folder in VS Code:</p>
+
+        <div class="os-tabs">
+          <button class="os-tab active" onclick="switchOS(this, 'vscode')">Windows</button>
+          <button class="os-tab" onclick="switchOS(this, 'vscode')">Mac / Linux</button>
+        </div>
+
+        <div class="os-content active" data-group="vscode">
+          <pre><code>code C:\Users\YourName\self-hosted-ai-starter-kit\docker-compose.yml</code></pre>
+        </div>
+        <div class="os-content" data-group="vscode">
+          <pre><code>code ~/self-hosted-ai-starter-kit/docker-compose.yml</code></pre>
+        </div>
+
+        <p>Scroll to the very bottom of the file. At the end of the <code>services:</code> section, paste this block. Make sure the indentation matches the other services (2 spaces before <code>ngrok:</code>):</p>
+
+        <div class="yaml-block">
+<span class="yaml-comment">  # Add this at the bottom of the services: section</span>
+  <span class="yaml-key">ngrok</span>:
+    <span class="yaml-key">image</span>: <span class="yaml-string">ngrok/ngrok:latest</span>
+    <span class="yaml-key">restart</span>: <span class="yaml-value">unless-stopped</span>
+    <span class="yaml-key">command</span>: <span class="yaml-string">http --domain=YOUR-DOMAIN.ngrok-free.app http://n8n:5678 --log=stdout</span>
+    <span class="yaml-key">environment</span>:
+      - <span class="yaml-string">NGROK_AUTHTOKEN=YOUR_AUTHTOKEN_HERE</span>
+    <span class="yaml-key">networks</span>:
+      - <span class="yaml-value">demo</span>
+    <span class="yaml-key">depends_on</span>:
+      - <span class="yaml-value">n8n</span>
+        </div>
+
+        <p>Replace <code>YOUR-DOMAIN.ngrok-free.app</code> with your actual static domain, and <code>YOUR_AUTHTOKEN_HERE</code> with your actual authtoken.</p>
+
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>The network: demo line is required</strong>
+            <p>This is the most common mistake. The ngrok container needs to be on the same internal Docker network as n8n to reach it by hostname. Without <code>networks: - demo</code>, ngrok will say <code>no such host</code> and fail to connect even though both containers are running.</p>
+          </div>
+        </div>
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>Why http://n8n:5678 and not localhost:5678?</strong>
+            <p>Inside Docker, containers don't see each other as <code>localhost</code>. They use the container name as the hostname. Since your n8n container is named <code>n8n</code>, ngrok reaches it at <code>http://n8n:5678</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="ngrok-run">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3>Start the ngrok Container</h3>
+        <p>Save the file, then run this in the Docker Desktop terminal (make sure you're in the starter kit folder):</p>
+        <pre><code>cd path/to/self-hosted-ai-starter-kit
+docker compose up -d ngrok</code></pre>
+        <p>Docker will pull the ngrok image and start the container. In Docker Desktop, you should see <strong>ngrok-1</strong> appear in your container list with a green dot.</p>
+        <div class="callout tip">
+          <span class="callout-icon">✅</span>
+          <div class="callout-body">
+            <strong>How to confirm it's working</strong>
+            <p>Click on the ngrok-1 container in Docker Desktop and open its <strong>Logs</strong> tab. Look for a line that says <code>started tunnel ... url=https://your-domain.ngrok-free.app</code>. Then visit that URL in your browser — you should see your n8n login screen.</p>
+          </div>
+        </div>
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>If ngrok keeps restarting (spinning icon)</strong>
+            <p>Check the container logs. Common causes: invalid authtoken (regenerate it in the ngrok dashboard), or the token was already in use from a separate PowerShell ngrok session running at the same time. Close any other ngrok instances before starting the Docker one.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h3>Update n8n's Webhook URL</h3>
+        <p>n8n needs to know your public URL so it generates correct webhook links. Set this by adding an environment variable to your n8n service in <code>docker-compose.yml</code>. Find the <code>n8n:</code> service block and look for its <code>environment:</code> section. Add this line:</p>
+        <pre><code>- WEBHOOK_URL=https://your-domain.ngrok-free.app</code></pre>
+        <p>Then recreate the n8n container:</p>
+        <pre><code>docker compose up -d --force-recreate n8n</code></pre>
+        <p>Now when you open a webhook node in n8n, the Production URL will show your ngrok domain instead of localhost.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- PART 4: UPDATES -->
+  <section class="part" id="part4">
+    <div class="part-header">
+      <span class="part-number">04</span>
+      <h2>Updating <em>the Stack</em></h2>
+    </div>
+
+    <p style="color:var(--text-muted); margin-bottom:2rem;">
+      Updating is safe and straightforward. Docker pulls new images and only recreates containers that have updates. Your volumes (where your data lives) are never touched. Check for updates roughly once a month.
+    </p>
+
+    <div class="step" id="update-all">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Update All Containers at Once</h3>
+        <p>Open the Docker Desktop terminal, navigate to your stack folder, and run:</p>
+        <pre><code>cd path/to/self-hosted-ai-starter-kit
+docker compose pull
+docker compose up -d</code></pre>
+        <p><code>docker compose pull</code> downloads the latest image for every service. <code>docker compose up -d</code> recreates any container that now has a newer image. Containers with no update keep running untouched.</p>
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>What these commands do exactly</strong>
+            <p><code>pull</code> only downloads — it doesn't restart anything. <code>up -d</code> applies the updates by recreating containers with the new image. Your workflows, credentials, and data stay intact because they live in Docker volumes, not the container itself.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="update-single">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Update a Single Container</h3>
+        <p>To update just one service (for example, n8n only), name it explicitly:</p>
+        <pre><code>docker compose pull n8n
+docker compose up -d n8n</code></pre>
+
+        <p>The same pattern works for any service in the stack:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Container</th>
+              <th>Update command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>n8n</strong></td>
+              <td><code>docker compose pull n8n && docker compose up -d n8n</code></td>
+            </tr>
+            <tr>
+              <td><strong>Postgres</strong></td>
+              <td><code>docker compose pull postgres && docker compose up -d postgres</code></td>
+            </tr>
+            <tr>
+              <td><strong>Ollama</strong></td>
+              <td><code>docker compose pull ollama && docker compose up -d ollama</code></td>
+            </tr>
+            <tr>
+              <td><strong>Qdrant</strong></td>
+              <td><code>docker compose pull qdrant && docker compose up -d qdrant</code></td>
+            </tr>
+            <tr>
+              <td><strong>ngrok</strong></td>
+              <td><code>docker compose pull ngrok && docker compose up -d --force-recreate ngrok</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="step" id="update-safe">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Safe Update Checklist</h3>
+        <p>Run through this before and after every update:</p>
+        <ul class="checklist">
+          <li><span class="check-box"></span>Your workflows are working before you start (test a webhook or manual run)</li>
+          <li><span class="check-box"></span>You know where your <code>docker-compose.yml</code> file is (you'll need it if something breaks)</li>
+          <li><span class="check-box"></span>Run <code>docker compose pull</code> first — just the download, no restarts yet</li>
+          <li><span class="check-box"></span>Run <code>docker compose up -d</code> to apply the updates</li>
+          <li><span class="check-box"></span>Open n8n in your browser and confirm you can log in</li>
+          <li><span class="check-box"></span>Check that your active workflows are still published</li>
+          <li><span class="check-box"></span>Test a webhook to confirm your ngrok URL still routes correctly</li>
+          <li><span class="check-box"></span>Check Docker Desktop — all containers should have green dots</li>
+        </ul>
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>If something breaks after an update</strong>
+            <p>Check the logs of the affected container in Docker Desktop. Most issues are either a changed configuration format in a new version, or a container not reconnecting to its volume properly. You can roll back by specifying an older image tag in <code>docker-compose.yml</code> — for example, <code>n8nio/n8n:1.45.0</code> instead of <code>n8nio/n8n:latest</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- TROUBLESHOOTING -->
+  <section class="part" id="troubleshooting">
+    <div class="part-header">
+      <span class="part-number">05</span>
+      <h2>Common <em>Issues</em></h2>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>Cause</th>
+          <th>Fix</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Docker won't start — WSL timeout</strong></td>
+          <td>WSL 2 process hung or stale session on Windows</td>
+          <td>Open PowerShell and run <code>wsl --shutdown</code>, wait 10 seconds, reopen Docker. If it persists, fully restart your PC.</td>
+        </tr>
+        <tr>
+          <td><strong>n8n shows "Set up owner account" after recreating the container</strong></td>
+          <td>New n8n container isn't connecting to the Postgres database — it's using a fresh SQLite instead</td>
+          <td>Delete the standalone n8n container, then run <code>docker compose up -d n8n</code> from inside the starter kit folder to recreate it properly with the right environment variables pointing to Postgres.</td>
+        </tr>
+        <tr>
+          <td><strong>ngrok container keeps restarting</strong></td>
+          <td>Invalid or revoked authtoken</td>
+          <td>Go to the ngrok dashboard, click <strong>Reset Authtoken</strong>, copy the new token, update your <code>docker-compose.yml</code>, then run <code>docker compose up -d --force-recreate ngrok</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>ngrok error: ERR_NGROK_8012 / undefined://undefined</strong></td>
+          <td>ngrok can't reach n8n — they're on different Docker networks</td>
+          <td>Add <code>networks: - demo</code> to the ngrok service in <code>docker-compose.yml</code>. The command must use <code>http://n8n:5678</code> not <code>localhost:5678</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>ngrok error: ERR_NGROK_334 — endpoint already online</strong></td>
+          <td>Two ngrok instances running at the same time — one in Docker, one in a terminal</td>
+          <td>Stop whichever one is running outside Docker (Ctrl+C in the terminal) before starting the Docker ngrok container.</td>
+        </tr>
+        <tr>
+          <td><strong>Webhook 404 from Meta / Instagram</strong></td>
+          <td>The workflow isn't published, or the webhook path changed</td>
+          <td>Make sure the workflow is set to <strong>Published</strong> (not just active in test mode). Check the Production URL in the webhook node matches exactly what's in Meta's callback URL field.</td>
+        </tr>
+        <tr>
+          <td><strong>Can't delete a Docker image — "image is in use"</strong></td>
+          <td>A stopped container still references that image</td>
+          <td>Delete the container first (even if it's stopped), then delete the image. Or just leave it — dangling images don't affect running containers.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="guide-footer">
+    Chelsea Andrea Dominguez · Systems Manual · Docker Stack Guide · v1.0
+  </div>
+
+</main>
+
+<script>
+  function switchOS(btn, group) {
+    const parent = btn.closest('.step-body') || btn.closest('.part') || document;
+    const tabs = btn.parentElement.querySelectorAll('.os-tab');
+    const index = Array.from(tabs).indexOf(btn);
+    const contents = parent.querySelectorAll(`.os-content[data-group="${group}"]`);
+
+    tabs.forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    contents.forEach((c, i) => {
+      c.classList.toggle('active', i === index);
+    });
+  }
+</script>
+
+</body>
+</html>
